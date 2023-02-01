@@ -152,7 +152,7 @@ TOKENS = Table(
     Column('decimals', Integer),
     Column('total_supply', Numeric(78)),
     Column('block_number', BigInteger),
-    Column('block_hash',VARCHAR(66)),
+    Column('block_hash',String),
     Column('block_timestamp',TIMESTAMP),
     PrimaryKeyConstraint('address', 'block_number', name='tokens_pk'),
 )
@@ -165,5 +165,7 @@ CONTRACTS = Table(
     Column('is_erc20', Boolean),
     Column('is_erc721', Boolean),
     Column('block_number', BigInteger),
+    Column('block_hash',String),
+    Column('block_timestamp',TIMESTAMP),
     PrimaryKeyConstraint('address', 'block_number', name='contracts_pk'),
 )
