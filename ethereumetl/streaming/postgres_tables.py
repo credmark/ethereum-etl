@@ -101,7 +101,7 @@ LOGS = Table(
     Column('block_timestamp', TIMESTAMP),
     Column('block_number', BigInteger),
     Column('block_hash', String),
-    PrimaryKeyConstraint('log_index', 'transaction_hash','address', name='logs_pk')
+    PrimaryKeyConstraint('log_index', 'transaction_hash','address','block_number', name='logs_pk')
 )
 
 TOKEN_TRANSFERS = Table(
@@ -115,7 +115,7 @@ TOKEN_TRANSFERS = Table(
     Column('block_timestamp', TIMESTAMP),
     Column('block_number', BigInteger),
     Column('block_hash', String),
-    PrimaryKeyConstraint('token_address', 'transaction_hash', 'log_index', name='token_transfers_pk'),
+    PrimaryKeyConstraint('block_number','token_address', 'transaction_hash', 'log_index', name='token_transfers_pk'),
 
 )
 
