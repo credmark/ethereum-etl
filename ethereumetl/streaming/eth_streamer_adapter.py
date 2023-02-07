@@ -1,3 +1,4 @@
+import itertools
 import logging
 
 from blockchainetl.jobs.exporters.console_item_exporter import ConsoleItemExporter
@@ -90,15 +91,24 @@ class EthStreamerAdapter:
 
         logging.info('Exporting with ' + type(self.item_exporter).__name__)
 
+        uniq_blocks = uniq(enriched_blocks, ('hash'))
+        uniq_transactions = uniq(enriched_transactions, ('hash'))
+        uniq_receipts = uniq(enriched_receipts, ('transaction_hash'))
+        uniq_logs = uniq(enriched_logs, ('transaction_hash', 'log_index'))
+        uniq_token_transfers = uniq(enriched_token_transfers, ('transaction_hash', 'log_index'))
+        uniq_traces = uniq(enriched_traces, ('trace_id'))
+        uniq_contracts = uniq(enriched_contracts, ('address'))
+        uniq_tokens = uniq(enriched_tokens, ('address'))
+
         all_items = \
-            sort_by(enriched_blocks, 'number') + \
-            sort_by(enriched_transactions, ('block_number', 'transaction_index')) + \
-            sort_by(enriched_logs, ('block_number', 'log_index')) + \
-            sort_by(enriched_receipts, ('block_number', 'transaction_index')) + \
-            sort_by(enriched_token_transfers, ('block_number', 'log_index')) + \
-            sort_by(enriched_traces, ('block_number', 'trace_index')) + \
-            sort_by(enriched_contracts, ('block_number',)) + \
-            sort_by(enriched_tokens, ('block_number',))
+            sort_by(uniq_blocks, 'number') + \
+            sort_by(uniq_transactions, ('block_number', 'transaction_index')) + \
+            sort_by(uniq_receipts, ('block_number', 'transaction_index')) + \
+            sort_by(uniq_logs, ('block_number', 'log_index')) + \
+            sort_by(uniq_token_transfers, ('block_number', 'log_index')) + \
+            sort_by(uniq_traces, ('block_number', 'trace_index')) + \
+            sort_by(uniq_contracts, ('block_number')) + \
+            sort_by(uniq_tokens, ('block_number'))
 
         self.calculate_item_ids(all_items)
         self.calculate_item_timestamps(all_items)
@@ -228,5 +238,21 @@ class EthStreamerAdapter:
 
 def sort_by(arr, fields):
     if isinstance(fields, tuple):
-        fields = tuple(fields)
-    return sorted(arr, key=lambda item: tuple(item.get(f) for f in fields))
+        key = lambda item: tuple(item.get(f) for f in fields)
+    elif isinstance(fields, str):
+        key = lambda item: item[fields]
+    else:
+        raise Exception('fields can only be a tuple or string')
+
+    return sorted(arr, key=key)
+
+def uniq(arr, fields):
+    if isinstance(fields, tuple):
+        key = lambda item: tuple(item.get(f) for f in fields)
+    elif isinstance(fields, str):
+        key = lambda item: item[fields]
+    else:
+        raise Exception('fields can only be a tuple or string')
+    
+    arr = sorted(arr, key=key)
+    return [list(a[1])[-1] for a in itertools.groupby(arr, key)]
